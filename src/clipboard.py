@@ -1,8 +1,8 @@
 import platform
-
-import pyautogui
 import pyperclip
+from pynput.keyboard import Key, Controller
 
+keyboard = Controller()
 
 def copy_to_input(text: str) -> None:
     """
@@ -14,7 +14,14 @@ def copy_to_input(text: str) -> None:
         text: Text to copy and paste
     """
     pyperclip.copy(text)
-    if platform.system() == "Windows":
-        pyautogui.hotkey("ctrl", "v")
-    else:
-        pyautogui.hotkey("command", "v")
+    system = platform.system()
+    
+    if system == "Darwin":  # macOS
+        modifier = Key.cmd
+    else:  # Windows 或 Linux
+        modifier = Key.ctrl
+
+    # 3. 執行貼上動作
+    with keyboard.pressed(modifier):
+        keyboard.press('v')
+        keyboard.release('v')

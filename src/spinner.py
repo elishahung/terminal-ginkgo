@@ -24,9 +24,22 @@ class Spinner:
         self.running = False
         self.thread: threading.Thread | None = None
 
+    def _get_spinner_chars(self):
+        """Get spinner characters based on terminal encoding support."""
+        unicode_chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+        ascii_chars = ["|", "/", "-", "\\"]
+
+        # Check if stdout can encode Unicode Braille characters
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        try:
+            "⠋".encode(encoding)
+            return unicode_chars
+        except (UnicodeEncodeError, LookupError):
+            return ascii_chars
+
     def _spin(self):
         """Internal method that runs the spinner animation loop."""
-        chars = itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
+        chars = itertools.cycle(self._get_spinner_chars())
         while self.running:
             sys.stdout.write(f"\r{next(chars)} {self.message}")
             sys.stdout.flush()

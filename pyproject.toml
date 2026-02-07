@@ -5,7 +5,7 @@ requires-python = ">=3.13"
 dependencies = [
     "nuitka>=4.0",
     "psutil>=7.0.0",
-    "pyautogui>=0.9.54",
+    "pynput>=1.8.1",
     "pyperclip>=1.11.0",
     "requests>=2.32.0",
 ]
