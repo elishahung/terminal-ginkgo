@@ -4,18 +4,18 @@ import platform
 
 def get_parent_process_name() -> str:
     """
-    取得父程序的名稱。
-    
+    Get the name of the parent process.
+
     Returns:
-        str: 父程序名稱（小寫），如果無法取得則回傳空字串
+        str: Parent process name (lowercase), or empty string if unavailable
     """
     try:
         import psutil
         parent = psutil.Process(os.getpid()).parent()
         if parent:
-            # 可能需要往上找，因為 Python 的父程序可能是另一個 Python 或包裝程式
+            # May need to look further up, as Python's parent might be another wrapper
             parent_name = parent.name().lower()
-            # 如果父程序是 python，再往上找
+            # If parent is python, look one level higher
             if "python" in parent_name:
                 grandparent = parent.parent()
                 if grandparent:
@@ -30,14 +30,14 @@ def get_parent_process_name() -> str:
 
 def detect_shell() -> str:
     """
-    動態偵測目前使用的 shell 類型。
-    
-    優先使用父程序偵測（較準確），fallback 到環境變數檢查。
-    
+    Dynamically detect the current shell type.
+
+    Uses parent process detection (more accurate) with environment variable fallback.
+
     Returns:
-        str: 'cmd', 'powershell', 'bash', 'zsh', 'fish', 或 'unknown'
+        str: 'cmd', 'powershell', 'bash', 'zsh', 'fish', or 'unknown'
     """
-    # 方法 1: 透過父程序偵測（最準確）
+    # Method 1: Detect via parent process (most accurate)
     parent_name = get_parent_process_name()
     if parent_name:
         if "powershell" in parent_name or "pwsh" in parent_name:
@@ -50,12 +50,12 @@ def detect_shell() -> str:
             return "zsh"
         elif "fish" in parent_name:
             return "fish"
-    
-    # 方法 2: 透過環境變數偵測（fallback）
-    # 檢查 SHELL 環境變數 (Unix-like 系統)
+
+    # Method 2: Detect via environment variables (fallback)
+    # Check SHELL environment variable (Unix-like systems)
     shell_env = os.environ.get("SHELL", "")
-    
-    # 檢查 Unix shell
+
+    # Check Unix shells
     if shell_env:
         shell_name = os.path.basename(shell_env).lower()
         if "bash" in shell_name:
@@ -65,88 +65,87 @@ def detect_shell() -> str:
         elif "fish" in shell_name:
             return "fish"
         elif "sh" in shell_name:
-            return "bash"  # 預設使用 bash 相容指令
-    
-    # Windows 預設檢查
+            return "bash"  # Default to bash-compatible commands
+
+    # Windows default detection
     if platform.system() == "Windows":
-        # 檢查是否在 Git Bash 或 WSL 中
+        # Check if running in Git Bash or WSL
         if os.environ.get("MSYSTEM"):  # Git Bash
             return "bash"
         if os.environ.get("WSL_DISTRO_NAME"):  # WSL
             return "bash"
-        # Windows 預設使用 cmd
+        # Windows defaults to cmd
         return "cmd"
-    
-    # 其他 Unix-like 系統預設使用 bash
+
+    # Other Unix-like systems default to bash
     return "bash"
 
 
 # =============================================================================
-# 系統提示詞模組化配置
+# System Prompt Modular Configuration
 # =============================================================================
 
-# 共同的基礎規則
-BASE_RULES = """規則：
-- 只回答純文字單行指令
-- 不要使用 JSON、Markdown 或任何格式化
-- 如果指令包含使用者需要替換的部分，用明顯的佔位符如 input.mp4、output.mp4 等
-- 如果真的需要，可以加上簡短的解釋"""
+# Common base rules
+BASE_RULES = """Rules:
+- Only respond with plain text single-line commands
+- Do not use JSON, Markdown, or any formatting
+- If the command contains parts the user needs to replace, use obvious placeholders like input.mp4, output.mp4, etc.
+- If really necessary, you may add a brief explanation"""
 
-# 各 Shell 的特定配置
+# Shell-specific configurations
 SHELL_CONFIGS = {
     "cmd": {
         "name": "Windows cmd.exe",
         "context": "Windows Terminal",
-        "syntax_rules": "- 不要使用 PowerShell 或 bash 專屬語法，只能用 cmd.exe 相容的指令",
+        "syntax_rules": "- Do not use PowerShell or bash-specific syntax, only use cmd.exe compatible commands",
     },
     "powershell": {
         "name": "PowerShell",
         "context": "PowerShell",
-        "syntax_rules": "- 使用 PowerShell 原生語法和 cmdlet（如 Get-ChildItem、ForEach-Object 等）",
+        "syntax_rules": "- Use native PowerShell syntax and cmdlets (e.g., Get-ChildItem, ForEach-Object, etc.)",
     },
     "bash": {
         "name": "Bash",
         "context": "Bash shell",
-        "syntax_rules": "- 使用標準的 Unix/Linux 指令和 Bash 語法",
+        "syntax_rules": "- Use standard Unix/Linux commands and Bash syntax",
     },
     "zsh": {
         "name": "Zsh",
         "context": "Zsh shell",
-        "syntax_rules": "- 使用標準的 Unix/Linux 指令，可以使用 Zsh 特有語法（如 glob 擴展）",
+        "syntax_rules": "- Use standard Unix/Linux commands, may use Zsh-specific syntax (e.g., glob expansion)",
     },
     "fish": {
         "name": "Fish",
         "context": "Fish shell",
-        "syntax_rules": "- 使用 Fish 語法（如 set 而非 export，使用 ; 而非 && 連接指令）",
+        "syntax_rules": "- Use Fish syntax (e.g., set instead of export, use ; instead of && to chain commands)",
     },
 }
 
 
 def build_system_prompt(shell_type: str) -> str:
     """
-    根據 shell 類型動態組裝系統提示詞。
-    
+    Build system prompt dynamically based on shell type.
+
     Args:
-        shell_type: shell 類型 ('cmd', 'powershell', 'bash', 'zsh', 'fish')
-    
+        shell_type: Shell type ('cmd', 'powershell', 'bash', 'zsh', 'fish')
+
     Returns:
-        str: 組裝好的系統提示詞
+        str: Assembled system prompt
     """
     config = SHELL_CONFIGS.get(shell_type, SHELL_CONFIGS["bash"])
-    
-    return f"""你是一個命令列助手。使用者會在 {config['context']} 中用非常簡短的方式問問題，請你回答可以直接在 {config['name']} 執行的指令。
+
+    return f"""You are a command-line assistant. The user will ask questions in very brief phrases within {config['context']}. Respond with commands that can be directly executed in {config['name']}.
 
 {BASE_RULES}
 {config['syntax_rules']}"""
 
 
-# 方便直接 import 使用
+# Convenient direct import
 SYSTEM_PROMPT = build_system_prompt(detect_shell())
 
 
 if __name__ == "__main__":
-    # 測試用：顯示偵測結果
+    # Test: Display detection results
     shell = detect_shell()
-    print(f"偵測到的 Shell: {shell}")
-    print(f"使用的 SYSTEM_PROMPT 前 50 字元: {SYSTEM_PROMPT[:50]}...")
-    
+    print(f"Detected shell: {shell}")
+    print(f"SYSTEM_PROMPT first 50 chars: {SYSTEM_PROMPT[:50]}...")
