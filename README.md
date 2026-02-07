@@ -87,15 +87,16 @@ ai <your request in natural language>
 
 ```
 ai-terminal/
-├── main.py          # Entry point
-├── gemini.py        # Gemini API client (using raw requests)
-├── instruction.py   # System prompts for different shells
-├── settings.py      # Environment variable handling
-├── spinner.py       # Loading spinner animation
-├── clipboard.py     # Copy & paste functionality
-├── build.bat        # Nuitka build script
+├── src/
+│   ├── main.py          # Entry point
+│   ├── gemini.py        # Gemini API client (using raw requests)
+│   ├── instruction.py   # System prompts for different shells
+│   ├── settings.py      # Environment variable handling
+│   ├── spinner.py       # Loading spinner animation
+│   └── clipboard.py     # Copy & paste functionality
+├── build.bat            # Nuitka build script
 └── dist/
-    └── ai.exe       # Compiled executable
+    └── ai.exe           # Compiled executable
 ```
 
 ## Configuration

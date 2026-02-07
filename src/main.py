@@ -9,6 +9,8 @@ import sys
 from instruction import SYSTEM_PROMPT
 from settings import get_api_key
 from spinner import Spinner
+from gemini import generate_content
+from clipboard import copy_to_input
 
 
 def main():
@@ -19,8 +21,7 @@ def main():
 
     user_message = " ".join(sys.argv[1:])
 
-    # Import here to defer loading until needed
-    from gemini import generate_content
+
 
     with Spinner(""):
         response_text = generate_content(
@@ -30,7 +31,6 @@ def main():
         )
 
     if response_text:
-        from clipboard import copy_to_input
         copy_to_input(response_text.strip())
 
 

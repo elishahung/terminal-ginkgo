@@ -4,5 +4,5 @@ uv run python -m nuitka ^
   --output-dir=dist ^
   --remove-output ^
   --lto=yes ^
-  main.py ^
+  src/main.py ^
   -o ai.exe
